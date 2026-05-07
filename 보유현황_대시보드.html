@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인증수련활동 보유현황 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4f8;--surface:#fff;--s2:#f7f9fc;--border:#e2e8f0;
+  --text:#1a202c;--muted:#718096;
+  --blue:#2563eb;--blue-lt:#dbeafe;--blue-dk:#1d4ed8;
+  --green:#16a34a;--green-lt:#dcfce7;
+  --orange:#ea580c;--orange-lt:#ffedd5;
+  --purple:#7c3aed;--purple-lt:#ede9fe;
+  --teal:#0d9488;--teal-lt:#ccfbf1;
+  --red:#dc2626;--pink:#db2777;
+  --A:#2563eb;--B:#ea580c;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:13px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#1e3a8a,#2563eb 60%,#0d9488);padding:18px 28px;color:#fff;position:sticky;top:0;z-index:300;box-shadow:0 4px 20px rgba(37,99,235,.3);}
+.header-inner{display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:20px;font-weight:900;}
+.header h1 em{font-style:normal;font-size:12px;opacity:.75;font-weight:400;display:block;margin-top:2px;}
+.hbadges{display:flex;gap:8px;}
+.hb{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;font-family:'DM Mono',monospace;text-align:center;}
+.hb small{display:block;font-size:9px;font-weight:400;opacity:.7;margin-top:1px;}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;padding:0 28px;background:var(--surface);border-bottom:2px solid var(--border);overflow-x:auto;}
+.tab-btn{padding:11px 20px;border:none;background:transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-btn:hover{color:var(--text);}
+
+/* Panel */
+.panel{display:none;padding:22px 28px 40px;animation:fadeUp .35s ease;}
+.panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.card-title span{color:var(--text);text-transform:none;letter-spacing:0;font-size:14px;font-weight:700;}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+
+/* KPI */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kv{font-size:24px;font-weight:900;font-family:'DM Mono',monospace;line-height:1.1;}
+.kl{font-size:11px;color:var(--muted);margin-top:5px;}
+.ki{font-size:18px;margin-bottom:8px;}
+
+/* Bar */
+.br{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bl{min-width:90px;font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bl.w{min-width:115px;}
+.bt{flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.bf{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:11px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;transition:width .8s cubic-bezier(.34,1.1,.64,1);min-width:28px;white-space:nowrap;}
+.c1{background:linear-gradient(90deg,var(--blue-dk),var(--blue));}
+.c2{background:linear-gradient(90deg,#15803d,var(--green));}
+.c3{background:linear-gradient(90deg,#c2410c,var(--orange));}
+.c4{background:linear-gradient(90deg,#6d28d9,var(--purple));}
+.c5{background:linear-gradient(90deg,#0f766e,var(--teal));}
+.c6{background:linear-gradient(90deg,#be185d,var(--pink));}
+.c7{background:linear-gradient(90deg,#b91c1c,var(--red));}
+.bp{min-width:36px;font-size:10px;color:var(--muted);text-align:right;font-family:'DM Mono',monospace;}
+
+/* Donut */
+.dw{display:flex;align-items:center;gap:14px;}
+.ll{flex:1;}
+.li{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:11px;color:var(--muted);}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.lv{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600;}
+
+/* Section title */
+.st{font-size:16px;font-weight:900;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px;}
+.stag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;}
+
+/* Map layout */
+.map-layout{display:grid;grid-template-columns:340px 1fr;gap:20px;min-height:600px;}
+.map-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;}
+.detail-panel{display:flex;flex-direction:column;gap:14px;}
+
+/* Region sidebar list */
+.rlist{display:flex;flex-direction:column;gap:2px;max-height:480px;overflow-y:auto;margin-top:10px;}
+.rbtn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--muted);transition:all .15s;text-align:left;}
+.rbtn:hover{background:var(--s2);color:var(--text);}
+.rbtn.active{background:var(--blue-lt);color:var(--blue);font-weight:700;}
+.rcnt{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;background:var(--s2);padding:2px 7px;border-radius:10px;color:var(--muted);}
+.rbtn.active .rcnt{background:var(--blue);color:#fff;}
+
+/* Korea SVG Map */
+.korea-map{width:100%;cursor:pointer;}
+.region-path{fill:#dbeafe;stroke:#fff;stroke-width:1.5;transition:fill .2s,filter .2s;cursor:pointer;}
+.region-path:hover{fill:#93c5fd;filter:drop-shadow(0 2px 6px rgba(37,99,235,.4));}
+.region-path.selected{fill:#2563eb;}
+.region-path.dim{fill:#e2e8f0;}
+.map-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--muted);}
+.map-legend-bar{display:flex;gap:2px;}
+.map-legend-seg{width:20px;height:8px;border-radius:2px;}
+
+/* Compare dual bar */
+.dbr{display:flex;align-items:center;gap:6px;margin-bottom:9px;}
+.dta{flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;display:flex;justify-content:flex-end;}
+.dtb{flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.dfa{height:100%;background:linear-gradient(90deg,var(--blue-dk),var(--A));border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;transition:width .8s ease;min-width:24px;}
+.dfb{height:100%;background:linear-gradient(90deg,#c2410c,var(--B));border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;transition:width .8s ease;min-width:24px;}
+.dlbl{font-size:11px;color:var(--text);text-align:center;min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Compare selectors */
+.cmp-sel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:20px;}
+.selbox{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:14px;}
+.selbox.a{border-color:var(--A);}
+.selbox.b{border-color:var(--B);}
+.sellbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;}
+.sellbl.a{color:var(--A);}
+.sellbl.b{color:var(--B);}
+.rsel{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;background:var(--surface);color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.vs{width:44px;height:44px;border-radius:50%;background:var(--text);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;margin:0 auto;flex-shrink:0;}
+
+/* Grade circle */
+.gc{display:flex;gap:12px;justify-content:space-around;margin-bottom:8px;}
+.gi{text-align:center;}
+.glbl{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* Stat row */
+.sr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.sr:last-child{border-bottom:none;}
+.sn{font-size:12px;color:var(--muted);}
+.sv{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--text);}
+
+/* winner pill */
+.win{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:3px;}
+.win.a{background:var(--blue-lt);color:var(--A);}
+.win.b{background:var(--orange-lt);color:var(--B);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>📁 인증수련활동 보유현황 대시보드
+        <em>기준일: 2025.12.31 · 전국 17개 시도 · 총 3,817건</em>
+      </h1>
+    </div>
+    <div class="hbadges">
+      <div class="hb">3,817<small>총 보유건수</small></div>
+      <div class="hb">513,958명<small>총 활동인원</small></div>
+      <div class="hb">277건<small>위험도 높은 활동</small></div>
+      <div class="hb">33,346원<small>평균 참가비</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="sw('overview',this)">📊 전체 현황</button>
+  <button class="tab-btn" onclick="sw('map',this)">🗺️ 지역별 지도</button>
+  <button class="tab-btn" onclick="sw('compare',this)">⚖️ 지역 비교</button>
+</div>
+
+<!-- ══════════ TAB 1: 전체 현황 ══════════ -->
+<div class="panel active" id="panel-overview">
+
+  <!-- KPI -->
+  <div class="g5" style="margin-bottom:18px;">
+    <div class="kpi" style="border-left:4px solid var(--blue)"><div class="ki">📋</div><div class="kv" style="color:var(--blue)">3,817</div><div class="kl">총 보유 인증건수</div></div>
+    <div class="kpi" style="border-left:4px solid var(--green)"><div class="ki">👥</div><div class="kv" style="color:var(--green)">513,958</div><div class="kl">총 활동인원</div></div>
+    <div class="kpi" style="border-left:4px solid var(--orange)"><div class="ki">💰</div><div class="kv" style="color:var(--orange)">33,346원</div><div class="kl">평균 참가비</div></div>
+    <div class="kpi" style="border-left:4px solid var(--red)"><div class="ki">⚠️</div><div class="kv" style="color:var(--red)">277건</div><div class="kl">위험도 높은 활동</div></div>
+    <div class="kpi" style="border-left:4px solid var(--purple)"><div class="ki">📏</div><div class="kv" style="color:var(--purple)">959건</div><div class="kl">일정규모 해당</div></div>
+  </div>
+
+  <div class="g3">
+    <!-- 지역별 보유건수 -->
+    <div class="card">
+      <div class="card-title">📍 <span>지역별 보유건수</span></div>
+      <div id="ov-region"></div>
+    </div>
+    <!-- 활동유형 + 기관유형1 -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <div class="card-title">🎭 <span>활동유형</span></div>
+        <div id="ov-acttype"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏛️ <span>기관유형1 (대분류)</span></div>
+        <div id="ov-org1"></div>
+      </div>
+    </div>
+    <!-- 기관유형2 -->
+    <div class="card">
+      <div class="card-title">🏢 <span>기관유형 (세부)</span></div>
+      <div id="ov-org2"></div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <!-- 의무인증 + 일정규모 + 위험도 -->
+    <div class="card">
+      <div class="card-title">⚠️ <span>의무인증 · 일정규모 · 위험도</span></div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">의무인증여부</div>
+        <div id="ov-mandatory"></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">일정규모</div>
+        <div id="ov-scale"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">위험도높은활동</div>
+        <div id="ov-danger"></div>
+      </div>
+    </div>
+    <!-- 활동영역 -->
+    <div class="card">
+      <div class="card-title">🎯 <span>활동영역</span></div>
+      <div id="ov-area"></div>
+    </div>
+    <!-- 교급 + 활동인원 -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <div class="card-title">🎒 <span>대상교급</span></div>
+        <div id="ov-grade"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 <span>활동인원 통계</span></div>
+        <div id="ov-inw"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 2: 지역별 지도 ══════════ -->
+<div class="panel" id="panel-map">
+  <div class="map-layout">
+
+    <!-- 지도 + 사이드리스트 -->
+    <div class="map-panel">
+      <div class="card-title" style="margin-bottom:10px;">🗺️ <span>지역 선택 (클릭)</span></div>
+
+      <!-- Korea SVG Map (simplified) -->
+      <svg class="korea-map" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" id="korea-svg">
+        <!-- 서울 -->
+        <path id="map-서울특별시" class="region-path" d="M118,82 L132,82 L136,90 L130,97 L118,95 Z" onclick="selectRegion('서울특별시')"><title>서울특별시</title></path>
+        <!-- 인천 -->
+        <path id="map-인천광역시" class="region-path" d="M100,88 L115,85 L118,95 L112,103 L100,100 Z" onclick="selectRegion('인천광역시')"><title>인천광역시</title></path>
+        <!-- 경기도 -->
+        <path id="map-경기도" class="region-path" d="M100,70 L145,68 L155,85 L150,110 L136,120 L118,118 L100,108 L90,95 L95,80 Z" onclick="selectRegion('경기도')"><title>경기도</title></path>
+        <!-- 강원 -->
+        <path id="map-강원특별자치도" class="region-path" d="M145,68 L200,65 L210,85 L205,120 L175,130 L155,120 L150,110 L155,85 Z" onclick="selectRegion('강원특별자치도')"><title>강원특별자치도</title></path>
+        <!-- 충북 -->
+        <path id="map-충청북도" class="region-path" d="M136,120 L170,118 L175,130 L165,150 L148,155 L130,148 L118,135 Z" onclick="selectRegion('충청북도')"><title>충청북도</title></path>
+        <!-- 세종 -->
+        <path id="map-세종특별자치시" class="region-path" d="M118,135 L128,133 L130,142 L122,145 Z" onclick="selectRegion('세종특별자치시')"><title>세종특별자치시</title></path>
+        <!-- 충남 -->
+        <path id="map-충청남도" class="region-path" d="M90,108 L118,118 L118,135 L110,155 L95,162 L78,152 L70,135 L75,118 Z" onclick="selectRegion('충청남도')"><title>충청남도</title></path>
+        <!-- 대전 -->
+        <path id="map-대전광역시" class="region-path" d="M118,140 L128,138 L132,148 L124,155 L115,150 Z" onclick="selectRegion('대전광역시')"><title>대전광역시</title></path>
+        <!-- 경북 -->
+        <path id="map-경상북도" class="region-path" d="M175,130 L220,125 L235,145 L228,175 L200,190 L175,182 L160,165 L165,150 Z" onclick="selectRegion('경상북도')"><title>경상북도</title></path>
+        <!-- 대구 -->
+        <path id="map-대구광역시" class="region-path" d="M188,180 L205,178 L210,192 L198,200 L185,195 Z" onclick="selectRegion('대구광역시')"><title>대구광역시</title></path>
+        <!-- 전북 -->
+        <path id="map-전북특별자치도" class="region-path" d="M95,162 L130,155 L148,165 L145,185 L128,198 L105,198 L85,185 L80,170 Z" onclick="selectRegion('전북특별자치도')"><title>전북특별자치도</title></path>
+        <!-- 전남 -->
+        <path id="map-전라남도" class="region-path" d="M85,198 L128,198 L138,215 L130,240 L110,252 L88,248 L70,232 L68,212 Z" onclick="selectRegion('전라남도')"><title>전라남도</title></path>
+        <!-- 광주 -->
+        <path id="map-광주광역시" class="region-path" d="M105,202 L118,200 L122,212 L112,218 L102,213 Z" onclick="selectRegion('광주광역시')"><title>광주광역시</title></path>
+        <!-- 경남 -->
+        <path id="map-경상남도" class="region-path" d="M160,190 L200,195 L220,210 L215,232 L190,245 L165,240 L148,225 L148,205 Z" onclick="selectRegion('경상남도')"><title>경상남도</title></path>
+        <!-- 울산 -->
+        <path id="map-울산광역시" class="region-path" d="M220,175 L238,172 L242,190 L228,198 L215,192 Z" onclick="selectRegion('울산광역시')"><title>울산광역시</title></path>
+        <!-- 부산 -->
+        <path id="map-부산광역시" class="region-path" d="M205,232 L225,228 L230,245 L215,252 L200,248 Z" onclick="selectRegion('부산광역시')"><title>부산광역시</title></path>
+        <!-- 제주 -->
+        <path id="map-제주특별자치도" class="region-path" d="M108,295 L148,292 L155,308 L140,320 L112,318 L100,308 Z" onclick="selectRegion('제주특별자치도')"><title>제주특별자치도</title></path>
+
+        <!-- Labels -->
+        <text x="121" y="92" font-size="6" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">서울</text>
+        <text x="106" y="97" font-size="5.5" fill="#1e3a8a" font-weight="600" text-anchor="middle" pointer-events="none">인천</text>
+        <text x="122" y="97" font-size="7" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">경기</text>
+        <text x="178" y="95" font-size="7" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">강원</text>
+        <text x="150" y="140" font-size="6.5" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">충북</text>
+        <text x="122" y="140" font-size="5" fill="#1e3a8a" font-weight="600" text-anchor="middle" pointer-events="none">세종</text>
+        <text x="96" y="138" font-size="6.5" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">충남</text>
+        <text x="122" y="150" font-size="5.5" fill="#1e3a8a" font-weight="600" text-anchor="middle" pointer-events="none">대전</text>
+        <text x="198" y="160" font-size="7" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">경북</text>
+        <text x="197" y="192" font-size="6" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">대구</text>
+        <text x="112" y="182" font-size="6.5" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">전북</text>
+        <text x="100" y="228" font-size="7" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">전남</text>
+        <text x="112" y="212" font-size="5.5" fill="#1e3a8a" font-weight="600" text-anchor="middle" pointer-events="none">광주</text>
+        <text x="184" y="220" font-size="6.5" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">경남</text>
+        <text x="229" y="188" font-size="5.5" fill="#1e3a8a" font-weight="600" text-anchor="middle" pointer-events="none">울산</text>
+        <text x="215" y="245" font-size="6" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">부산</text>
+        <text x="128" y="308" font-size="7" fill="#1e3a8a" font-weight="700" text-anchor="middle" pointer-events="none">제주</text>
+      </svg>
+
+      <!-- Region list -->
+      <div class="card-title" style="margin-top:8px;margin-bottom:4px;">📋 <span>지역 목록</span></div>
+      <div class="rlist" id="rlist"></div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detail-panel">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;">
+        <div style="font-size:48px;">🗺️</div>
+        <div style="font-size:16px;font-weight:600;">지도에서 지역을 클릭하거나<br>왼쪽 목록에서 선택하세요</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 3: 지역 비교 ══════════ -->
+<div class="panel" id="panel-compare">
+  <div class="cmp-sel">
+    <div class="selbox a">
+      <div class="sellbl a">🔵 지역 A</div>
+      <select class="rsel" id="sel-a" onchange="renderCompare()"></select>
+    </div>
+    <div class="vs">VS</div>
+    <div class="selbox b">
+      <div class="sellbl b">🟠 지역 B</div>
+      <select class="rsel" id="sel-b" onchange="renderCompare()"></select>
+    </div>
+  </div>
+  <div id="cmp-content">
+    <div style="text-align:center;padding:60px;color:var(--muted);">
+      <div style="font-size:40px;margin-bottom:12px;">⚖️</div>
+      <div style="font-size:15px;font-weight:600;">두 지역을 선택해주세요</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────
+// DATA
+// ──────────────────────────────────────
+const DATA = {"경기도":{"total":844,"act_type":{"기본형":384,"개별단위":259,"학교단체 숙박형":121,"숙박형":80},"org1":{"청소년수련시설":769,"일반":46,"공공행정":14,"교육기관":13,"컨소시엄":2},"org2":{"청소년수련원":454,"청소년문화의집":165,"청소년수련관":142,"영리법인":35,"공공기관":14,"교육청":12,"개인사업":7,"청소년야영장":4},"mandatory":{"해당없음":636,"일정규모":158,"복수해당":41,"고위험군":9},"scale":{"미해당":645,"해당":199},"danger":{"미해당":794,"해당":50},"area":{"자기(인성)계발활동":253,"모험개척활동":150,"문화예술활동":114,"건강·보건활동":74,"환경보존활동":70,"직업체험활동":69,"과학정보활동":43,"기타":37,"교류활동":21,"봉사활동":13},"inw_total":121474,"inw_avg":143.9,"inw_max":500,"fee_avg":34050,"fee_free":544,"grade":{"초":384,"중":336,"고":216,"대":12}},"전라남도":{"total":423,"act_type":{"개별단위":249,"기본형":84,"학교단체 숙박형":70,"숙박형":20},"org1":{"청소년수련시설":402,"일반":20,"공공행정":1},"org2":{"청소년수련원":330,"청소년수련관":40,"청소년문화의집":15,"영리법인":10,"유스호스텔":9,"비영리법인":8,"청소년특화시설":8,"기타":1},"mandatory":{"해당없음":312,"일정규모":98,"복수해당":8,"고위험군":5},"scale":{"미해당":317,"해당":106},"danger":{"미해당":410,"해당":13},"area":{"자기(인성)계발활동":174,"과학정보활동":77,"건강·보건활동":44,"문화예술활동":40,"모험개척활동":38,"환경보존활동":22,"직업체험활동":11,"기타":11,"봉사활동":6},"inw_total":71576,"inw_avg":169.2,"inw_max":500,"fee_avg":23156,"fee_free":299,"grade":{"초":139,"중":165,"고":131,"대":1}},"충청남도":{"total":402,"act_type":{"개별단위":187,"기본형":97,"학교단체 숙박형":79,"숙박형":36,"이동형":3},"org1":{"청소년수련시설":392,"일반":7,"교육기관":1,"컨소시엄":1,"공공행정":1},"org2":{"청소년수련원":276,"청소년수련관":55,"청소년문화의집":43,"유스호스텔":18,"비영리법인":3,"개인사업":3,"영리법인":1},"mandatory":{"해당없음":290,"일정규모":63,"복수해당":38,"고위험군":11},"scale":{"미해당":301,"해당":101},"danger":{"미해당":353,"해당":49},"area":{"자기(인성)계발활동":104,"모험개척활동":71,"문화예술활동":70,"건강·보건활동":48,"환경보존활동":32,"직업체험활동":27,"기타":24,"과학정보활동":14,"교류활동":8,"봉사활동":4},"inw_total":63486,"inw_avg":157.9,"inw_max":500,"fee_avg":36754,"fee_free":269,"grade":{"초":142,"중":195,"고":132,"대":6}},"경상북도":{"total":355,"act_type":{"개별단위":162,"기본형":83,"학교단체 숙박형":62,"숙박형":47,"이동형":1},"org1":{"청소년수련시설":318,"일반":20,"공공행정":17},"org2":{"청소년수련원":191,"청소년수련관":98,"청소년문화의집":29,"공공기관":17,"개인사업":12,"비영리법인":8},"mandatory":{"해당없음":238,"일정규모":80,"고위험군":32,"복수해당":5},"scale":{"미해당":270,"해당":85},"danger":{"미해당":318,"해당":37},"area":{"자기(인성)계발활동":122,"모험개척활동":65,"환경보존활동":59,"직업체험활동":45,"과학정보활동":22,"건강·보건활동":22,"문화예술활동":14,"봉사활동":3,"교류활동":2,"기타":1},"inw_total":46146,"inw_avg":130.0,"inw_max":420,"fee_avg":33007,"fee_free":209,"grade":{"초":130,"중":132,"고":125,"대":7}},"전북특별자치도":{"total":285,"act_type":{"개별단위":135,"기본형":74,"학교단체 숙박형":67,"숙박형":9},"org1":{"청소년수련시설":282,"공공행정":2,"일반":1},"org2":{"청소년수련원":219,"청소년문화의집":33,"청소년수련관":29,"공공기관":2,"개인사업":1,"유스호스텔":1},"mandatory":{"해당없음":186,"일정규모":76,"고위험군":15,"복수해당":8},"scale":{"미해당":201,"해당":84},"danger":{"미해당":262,"해당":23},"area":{"자기(인성)계발활동":70,"문화예술활동":66,"과학정보활동":56,"모험개척활동":40,"건강·보건활동":17,"직업체험활동":15,"환경보존활동":14,"기타":4,"봉사활동":3},"inw_total":43391,"inw_avg":152.2,"inw_max":500,"fee_avg":29554,"fee_free":179,"grade":{"초":103,"중":129,"고":91,"대":0}},"경상남도":{"total":250,"act_type":{"개별단위":89,"기본형":88,"숙박형":38,"학교단체 숙박형":35},"org1":{"청소년수련시설":246,"일반":2,"컨소시엄":1,"공공행정":1},"org2":{"청소년수련원":147,"청소년수련관":50,"청소년문화의집":37,"유스호스텔":9,"비영리법인":2,"청소년야영장":2},"mandatory":{"해당없음":161,"일정규모":49,"복수해당":33,"고위험군":7},"scale":{"미해당":168,"해당":82},"danger":{"미해당":210,"해당":40},"area":{"자기(인성)계발활동":59,"모험개척활동":51,"건강·보건활동":41,"과학정보활동":32,"직업체험활동":21,"문화예술활동":21,"환경보존활동":18,"기타":4,"봉사활동":2,"교류활동":1},"inw_total":40748,"inw_avg":163.0,"inw_max":450,"fee_avg":34010,"fee_free":164,"grade":{"초":90,"중":117,"고":81,"대":1}},"서울특별시":{"total":243,"act_type":{"기본형":224,"숙박형":16,"이동형":3},"org1":{"청소년수련시설":196,"일반":26,"컨소시엄":11,"공공행정":9,"교육기관":1},"org2":{"청소년수련관":127,"청소년문화의집":67,"비영리법인":12,"컨소시엄":11,"영리법인":9,"공공기관":6,"개인사업":5,"국가지자체":3},"mandatory":{"해당없음":229,"일정규모":7,"고위험군":5,"복수해당":2},"scale":{"미해당":234,"해당":9},"danger":{"미해당":236,"해당":7},"area":{"자기(인성)계발활동":66,"환경보존활동":37,"문화예술활동":28,"과학정보활동":23,"직업체험활동":23,"건강·보건활동":21,"봉사활동":15,"교류활동":15,"기타":9,"모험개척활동":6},"inw_total":9280,"inw_avg":38.2,"inw_max":450,"fee_avg":20980,"fee_free":167,"grade":{"초":166,"중":89,"고":42,"대":12}},"강원특별자치도":{"total":243,"act_type":{"기본형":82,"개별단위":63,"학교단체 숙박형":62,"숙박형":34,"이동형":2},"org1":{"청소년수련시설":212,"일반":18,"공공행정":11,"컨소시엄":2},"org2":{"청소년수련원":141,"청소년수련관":35,"청소년문화의집":34,"영리법인":16,"공공기관":11,"컨소시엄":2,"종교기관":2,"유스호스텔":2},"mandatory":{"해당없음":148,"일정규모":68,"복수해당":21,"고위험군":6},"scale":{"미해당":154,"해당":89},"danger":{"미해당":216,"해당":27},"area":{"자기(인성)계발활동":96,"모험개척활동":55,"건강·보건활동":31,"문화예술활동":22,"환경보존활동":12,"기타":9,"봉사활동":7,"과학정보활동":5,"직업체험활동":4,"교류활동":2},"inw_total":44152,"inw_avg":181.7,"inw_max":800,"fee_avg":67407,"fee_free":128,"grade":{"초":91,"중":113,"고":79,"대":2}},"충청북도":{"total":170,"act_type":{"학교단체 숙박형":57,"기본형":41,"개별단위":40,"숙박형":30,"이동형":2},"org1":{"청소년수련시설":165,"일반":4,"교육기관":1},"org2":{"청소년수련원":141,"청소년문화의집":14,"청소년수련관":10,"비영리법인":4,"교육청":1},"mandatory":{"일정규모":104,"해당없음":56,"고위험군":6,"복수해당":4},"scale":{"해당":108,"미해당":62},"danger":{"미해당":160,"해당":10},"area":{"자기(인성)계발활동":90,"모험개척활동":43,"건강·보건활동":18,"과학정보활동":8,"환경보존활동":5,"직업체험활동":4,"문화예술활동":2},"inw_total":35765,"inw_avg":210.4,"inw_max":500,"fee_avg":68806,"fee_free":64,"grade":{"초":62,"중":72,"고":54,"대":1}},"부산광역시":{"total":102,"act_type":{"기본형":78,"학교단체 숙박형":15,"숙박형":9},"org1":{"청소년수련시설":102},"org2":{"청소년수련관":48,"청소년문화의집":32,"유스호스텔":11,"청소년수련원":11},"mandatory":{"해당없음":74,"일정규모":28},"scale":{"미해당":74,"해당":28},"danger":{"미해당":102},"area":{"자기(인성)계발활동":34,"환경보존활동":17,"건강·보건활동":12,"직업체험활동":10,"문화예술활동":8,"과학정보활동":7,"기타":6,"봉사활동":5,"모험개척활동":3},"inw_total":7901,"inw_avg":77.5,"inw_max":350,"fee_avg":19398,"fee_free":58,"grade":{"초":49,"중":53,"고":20,"대":2}},"인천광역시":{"total":101,"act_type":{"기본형":73,"학교단체 숙박형":26,"개별단위":1,"이동형":1},"org1":{"청소년수련시설":100,"일반":1},"org2":{"청소년수련관":47,"청소년문화의집":25,"청소년수련원":19,"유스호스텔":9,"비영리법인":1},"mandatory":{"해당없음":73,"일정규모":24,"복수해당":3,"고위험군":1},"scale":{"미해당":74,"해당":27},"danger":{"미해당":97,"해당":4},"area":{"자기(인성)계발활동":30,"환경보존활동":17,"문화예술활동":15,"직업체험활동":13,"건강·보건활동":9,"모험개척활동":7,"과학정보활동":6,"봉사활동":3,"기타":1},"inw_total":9892,"inw_avg":97.9,"inw_max":450,"fee_avg":43812,"fee_free":50,"grade":{"초":65,"중":39,"고":17,"대":1}},"광주광역시":{"total":95,"act_type":{"기본형":89,"학교단체 숙박형":4,"개별단위":2},"org1":{"청소년수련시설":79,"일반":16},"org2":{"청소년문화의집":40,"청소년수련관":23,"영리법인":16,"청소년수련원":16},"mandatory":{"해당없음":85,"일정규모":10},"scale":{"미해당":85,"해당":10},"danger":{"미해당":95},"area":{"직업체험활동":29,"자기(인성)계발활동":27,"환경보존활동":14,"문화예술활동":9,"건강·보건활동":8,"과학정보활동":3,"모험개척활동":3,"기타":2},"inw_total":4688,"inw_avg":49.3,"inw_max":250,"fee_avg":11976,"fee_free":46,"grade":{"초":48,"중":60,"고":24,"대":0}},"대구광역시":{"total":88,"act_type":{"기본형":74,"숙박형":11,"학교단체 숙박형":3},"org1":{"청소년수련시설":82,"일반":6},"org2":{"청소년수련관":39,"청소년수련원":24,"청소년문화의집":15,"개인사업":5,"청소년특화시설":3,"영리법인":1,"유스호스텔":1},"mandatory":{"해당없음":87,"일정규모":1},"scale":{"미해당":87,"해당":1},"danger":{"미해당":88},"area":{"자기(인성)계발활동":28,"환경보존활동":16,"직업체험활동":15,"건강·보건활동":13,"과학정보활동":7,"문화예술활동":5,"기타":3,"모험개척활동":1},"inw_total":2379,"inw_avg":27.0,"inw_max":260,"fee_avg":18136,"fee_free":43,"grade":{"초":62,"중":26,"고":13,"대":2}},"대전광역시":{"total":75,"act_type":{"기본형":44,"개별단위":17,"학교단체 숙박형":14},"org1":{"청소년수련시설":69,"일반":4,"공공행정":2},"org2":{"청소년수련원":34,"청소년수련관":21,"청소년문화의집":14,"비영리법인":4,"공공기관":1},"mandatory":{"해당없음":52,"고위험군":11,"일정규모":6,"복수해당":6},"scale":{"미해당":63,"해당":12},"danger":{"미해당":58,"해당":17},"area":{"모험개척활동":32,"자기(인성)계발활동":14,"과학정보활동":8,"문화예술활동":8,"환경보존활동":5,"직업체험활동":3,"기타":2,"건강·보건활동":2,"봉사활동":1},"inw_total":5174,"inw_avg":69.0,"inw_max":240,"fee_avg":15156,"fee_free":47,"grade":{"초":42,"중":29,"고":13,"대":1}},"제주특별자치도":{"total":67,"act_type":{"기본형":48,"숙박형":10,"학교단체 숙박형":9},"org1":{"청소년수련시설":67},"org2":{"청소년문화의집":24,"청소년수련관":22,"청소년수련원":21},"mandatory":{"해당없음":49,"일정규모":18},"scale":{"미해당":49,"해당":18},"danger":{"미해당":67},"area":{"자기(인성)계발활동":42,"문화예술활동":8,"환경보존활동":7,"직업체험활동":5,"건강·보건활동":3,"봉사활동":1,"모험개척활동":1},"inw_total":6725,"inw_avg":100.4,"inw_max":420,"fee_avg":15884,"fee_free":44,"grade":{"초":44,"중":25,"고":6,"대":0}},"울산광역시":{"total":61,"act_type":{"기본형":61},"org1":{"청소년수련시설":58,"일반":3},"org2":{"청소년문화의집":40,"청소년수련관":18,"영리법인":3},"mandatory":{"해당없음":61},"scale":{"미해당":61},"danger":{"미해당":61},"area":{"자기(인성)계발활동":13,"과학정보활동":11,"문화예술활동":10,"환경보존활동":8,"기타":8,"직업체험활동":7,"건강·보건활동":1,"교류활동":1,"모험개척활동":1,"봉사활동":1},"inw_total":993,"inw_avg":16.3,"inw_max":40,"fee_avg":14016,"fee_free":46,"grade":{"초":50,"중":21,"고":4,"대":0}},"세종특별자치시":{"total":13,"act_type":{"기본형":13},"org1":{"청소년수련시설":13},"org2":{"청소년수련관":7,"청소년문화의집":6},"mandatory":{"해당없음":13},"scale":{"미해당":13},"danger":{"미해당":13},"area":{"환경보존활동":4,"자기(인성)계발활동":4,"직업체험활동":3,"문화예술활동":2},"inw_total":188,"inw_avg":14.5,"inw_max":30,"fee_avg":0,"fee_free":13,"grade":{"초":8,"중":5,"고":3,"대":0}},"_전체":{"total":3817,"act_type":{"기본형":1637,"개별단위":1204,"학교단체 숙박형":624,"숙박형":340,"이동형":12},"org1":{"청소년수련시설":3552,"일반":174,"공공행정":58,"컨소시엄":17,"교육기관":16},"org2":{"청소년수련원":2024,"청소년수련관":811,"청소년문화의집":633,"영리법인":91,"유스호스텔":64,"공공기관":53,"비영리법인":44,"개인사업":34},"mandatory":{"해당없음":2750,"일정규모":790,"복수해당":169,"고위험군":108},"scale":{"미해당":2858,"해당":959},"danger":{"미해당":3540,"해당":277},"area":{"자기(인성)계발활동":1226,"모험개척활동":567,"문화예술활동":442,"건강·보건활동":364,"환경보존활동":357,"과학정보활동":322,"직업체험활동":304,"기타":121,"봉사활동":64,"교류활동":50},"inw_total":513958,"inw_avg":134.6,"inw_max":800,"fee_avg":33346,"fee_free":2370,"grade":{"초":1675,"중":1606,"고":1051,"대":48}}};
+
+const REGIONS = Object.keys(DATA).filter(k=>k!=='_전체');
+const SORTED = [...REGIONS].sort((a,b)=>DATA[b].total-DATA[a].total);
+const MAX_TOTAL = DATA[SORTED[0]].total;
+
+const COLORS = ['#2563eb','#16a34a','#ea580c','#7c3aed','#0d9488','#db2777','#dc2626','#d97706','#0891b2','#65a30d'];
+const CCLS = ['c1','c2','c3','c4','c5','c6','c7'];
+
+// Heat color for map
+function heatCol(val, mx) {
+  const t = val/mx;
+  if(t>0.8) return '#1d4ed8';
+  if(t>0.6) return '#2563eb';
+  if(t>0.4) return '#3b82f6';
+  if(t>0.2) return '#93c5fd';
+  return '#bfdbfe';
+}
+
+// ──────────────────────────────────────
+// Utility: render bar rows
+// ──────────────────────────────────────
+function barRows(entries, total, maxV, wide=false) {
+  return entries.map(([k,v],i)=>`
+    <div class="br">
+      <div class="bl${wide?' w':''}">${k}</div>
+      <div class="bt"><div class="bf ${CCLS[i%7]}" style="width:${Math.max(v/maxV*100,2)}%">${v.toLocaleString()}</div></div>
+      <div class="bp">${(v/total*100).toFixed(1)}%</div>
+    </div>`).join('');
+}
+
+function gradeCircleSVG(val, total, color, label) {
+  const r=34, circ=2*Math.PI*r;
+  const arc = total ? circ*(val/total) : 0;
+  return `<div class="gi">
+    <svg viewBox="0 0 80 80" width="80" height="80">
+      <circle cx="40" cy="40" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="9"/>
+      <circle cx="40" cy="40" r="${r}" fill="none" stroke="${color}" stroke-width="9"
+        stroke-dasharray="${arc} ${circ-arc}" stroke-dashoffset="${circ*0.25}"/>
+      <text x="40" y="37" text-anchor="middle" font-size="13" font-weight="900" fill="#1a202c" font-family="DM Mono,monospace">${val.toLocaleString()}</text>
+      <text x="40" y="51" text-anchor="middle" font-size="9.5" fill="#718096" font-family="Noto Sans KR,sans-serif">${total?Math.round(val/total*100):0}%</text>
+    </svg>
+    <div class="glbl">${label}</div>
+  </div>`;
+}
+
+// ──────────────────────────────────────
+// TAB SWITCH
+// ──────────────────────────────────────
+function sw(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ──────────────────────────────────────
+// TAB 1: 전체 현황
+// ──────────────────────────────────────
+function renderOverview() {
+  const D = DATA['_전체'];
+
+  // 지역별
+  const regEntries = SORTED.map(r=>[r, DATA[r].total]);
+  document.getElementById('ov-region').innerHTML = barRows(regEntries, D.total, MAX_TOTAL);
+
+  // 활동유형
+  const at = Object.entries(D.act_type).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-acttype').innerHTML = barRows(at, D.total, at[0][1]);
+
+  // 기관유형1
+  const o1 = Object.entries(D.org1).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-org1').innerHTML = barRows(o1, D.total, o1[0][1]);
+
+  // 기관유형2
+  const o2 = Object.entries(D.org2).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-org2').innerHTML = barRows(o2, D.total, o2[0][1], true);
+
+  // 의무인증
+  const mnd = Object.entries(D.mandatory).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-mandatory').innerHTML = barRows(mnd, D.total, mnd[0][1]);
+
+  // 일정규모
+  const sc = Object.entries(D.scale).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-scale').innerHTML = barRows(sc, D.total, D.total);
+
+  // 위험도
+  const dg = Object.entries(D.danger).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-danger').innerHTML = barRows(dg, D.total, D.total);
+
+  // 활동영역
+  const ar = Object.entries(D.area).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('ov-area').innerHTML = barRows(ar, D.total, ar[0][1], true);
+
+  // 교급
+  const gTotal = D.grade['초']+D.grade['중']+D.grade['고']+D.grade['대'];
+  document.getElementById('ov-grade').innerHTML = `<div class="gc">
+    ${gradeCircleSVG(D.grade['초'],gTotal,'#2563eb','초등')}
+    ${gradeCircleSVG(D.grade['중'],gTotal,'#16a34a','중학교')}
+    ${gradeCircleSVG(D.grade['고'],gTotal,'#ea580c','고등')}
+    ${gradeCircleSVG(D.grade['대'],gTotal,'#7c3aed','대학')}
+  </div><p style="font-size:10px;color:var(--muted);margin-top:4px">* 복수 교급 대상 활동은 중복 집계</p>`;
+
+  // 활동인원
+  document.getElementById('ov-inw').innerHTML = `
+    <div class="sr"><span class="sn">총 활동인원</span><span class="sv" style="color:var(--blue)">${D.inw_total.toLocaleString()}명</span></div>
+    <div class="sr"><span class="sn">활동당 평균</span><span class="sv">${D.inw_avg}명</span></div>
+    <div class="sr"><span class="sn">최대 인원</span><span class="sv">${D.inw_max}명</span></div>
+    <div class="sr"><span class="sn">평균 참가비</span><span class="sv">${D.fee_avg.toLocaleString()}원</span></div>
+    <div class="sr"><span class="sn">무료 활동</span><span class="sv" style="color:var(--green)">${D.fee_free.toLocaleString()}건</span></div>`;
+}
+
+// ──────────────────────────────────────
+// TAB 2: 지도 & 지역 상세
+// ──────────────────────────────────────
+
+// Apply heat color to map
+SORTED.forEach(r=>{
+  const el = document.getElementById('map-'+r);
+  if(el) el.style.fill = heatCol(DATA[r].total, MAX_TOTAL);
+});
+
+// Build region list
+const rlist = document.getElementById('rlist');
+SORTED.forEach((r,i)=>{
+  const el = document.createElement('button');
+  el.className = 'rbtn';
+  el.id = 'rbtn-'+r;
+  el.innerHTML = `<span>${r}</span><span class="rcnt">${DATA[r].total}건</span>`;
+  el.onclick = ()=>selectRegion(r);
+  rlist.appendChild(el);
+});
+
+function selectRegion(region) {
+  // Update sidebar
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('rbtn-'+region);
+  if(btn){ btn.classList.add('active'); btn.scrollIntoView({block:'nearest'}); }
+
+  // Update map
+  document.querySelectorAll('.region-path').forEach(p=>{
+    const r = p.id.replace('map-','');
+    p.style.fill = heatCol(DATA[r]?.total||0, MAX_TOTAL);
+    p.classList.remove('selected');
+  });
+  const mp = document.getElementById('map-'+region);
+  if(mp){ mp.style.fill='#1d4ed8'; mp.classList.add('selected'); }
+
+  const D = DATA[region];
+  const rank = SORTED.indexOf(region)+1;
+  const pct = (D.total/DATA['_전체'].total*100).toFixed(1);
+
+  const at = Object.entries(D.act_type).sort((a,b)=>b[1]-a[1]);
+  const o1 = Object.entries(D.org1).sort((a,b)=>b[1]-a[1]);
+  const o2 = Object.entries(D.org2).sort((a,b)=>b[1]-a[1]);
+  const mnd = Object.entries(D.mandatory).sort((a,b)=>b[1]-a[1]);
+  const sc = Object.entries(D.scale).sort((a,b)=>b[1]-a[1]);
+  const dg = Object.entries(D.danger).sort((a,b)=>b[1]-a[1]);
+  const ar = Object.entries(D.area).sort((a,b)=>b[1]-a[1]);
+  const gTotal = D.grade['초']+D.grade['중']+D.grade['고']+D.grade['대'];
+
+  document.getElementById('detail-panel').innerHTML = `
+    <!-- Region header -->
+    <div class="card" style="padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:22px;font-weight:900;">📍 ${region}</div>
+        <div style="background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;">전국 ${rank}위</div>
+        <div style="background:var(--green-lt);color:var(--green);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;">전국 ${pct}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px;">
+        <div style="text-align:center;padding:10px;background:var(--s2);border-radius:8px;">
+          <div style="font-size:20px;font-weight:900;font-family:'DM Mono',monospace;color:var(--blue)">${D.total}</div>
+          <div style="font-size:10px;color:var(--muted)">보유건수</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--s2);border-radius:8px;">
+          <div style="font-size:20px;font-weight:900;font-family:'DM Mono',monospace;color:var(--green)">${D.inw_total.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted)">활동인원합계</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--s2);border-radius:8px;">
+          <div style="font-size:20px;font-weight:900;font-family:'DM Mono',monospace;color:var(--orange)">${D.inw_avg}</div>
+          <div style="font-size:10px;color:var(--muted)">평균활동인원</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--s2);border-radius:8px;">
+          <div style="font-size:20px;font-weight:900;font-family:'DM Mono',monospace;color:var(--red)">${D.danger['해당']||0}</div>
+          <div style="font-size:10px;color:var(--muted)">위험도높은활동</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--s2);border-radius:8px;">
+          <div style="font-size:20px;font-weight:900;font-family:'DM Mono',monospace;color:var(--purple)">${D.fee_avg.toLocaleString()}원</div>
+          <div style="font-size:10px;color:var(--muted)">평균참가비</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 1 -->
+    <div class="g2" style="margin-bottom:0;">
+      <div class="card">
+        <div class="card-title">🎭 <span>활동유형</span></div>
+        ${barRows(at, D.total, at[0]?.[1]||1)}
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 <span>활동영역</span></div>
+        ${barRows(ar, D.total, ar[0]?.[1]||1, true)}
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="g2" style="margin-bottom:0;">
+      <div class="card">
+        <div class="card-title">🏛️ <span>기관유형1 (대분류)</span></div>
+        ${barRows(o1, D.total, o1[0]?.[1]||1)}
+        <div style="margin-top:14px;" class="card-title">🏢 <span>기관유형 (세부)</span></div>
+        ${barRows(o2, D.total, o2[0]?.[1]||1, true)}
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ <span>의무인증 · 일정규모 · 위험도</span></div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;">의무인증여부</div>
+        ${barRows(mnd, D.total, mnd[0]?.[1]||1)}
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 6px;">일정규모</div>
+        ${barRows(sc, D.total, D.total)}
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 6px;">위험도높은활동</div>
+        ${barRows(dg, D.total, D.total)}
+      </div>
+    </div>
+
+    <!-- 교급 + 활동인원 -->
+    <div class="g2" style="margin-bottom:0;">
+      <div class="card">
+        <div class="card-title">🎒 <span>대상교급</span></div>
+        <div class="gc">
+          ${gradeCircleSVG(D.grade['초'],gTotal,'#2563eb','초등')}
+          ${gradeCircleSVG(D.grade['중'],gTotal,'#16a34a','중학교')}
+          ${gradeCircleSVG(D.grade['고'],gTotal,'#ea580c','고등')}
+          ${gradeCircleSVG(D.grade['대'],gTotal,'#7c3aed','대학')}
+        </div>
+        <p style="font-size:10px;color:var(--muted);margin-top:6px">* 복수 교급 대상 활동은 중복 집계</p>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 <span>활동인원 통계</span></div>
+        <div class="sr"><span class="sn">총 활동인원 합계</span><span class="sv" style="color:var(--blue)">${D.inw_total.toLocaleString()}명</span></div>
+        <div class="sr"><span class="sn">활동당 평균 인원</span><span class="sv">${D.inw_avg}명</span></div>
+        <div class="sr"><span class="sn">최대 활동인원</span><span class="sv">${D.inw_max}명</span></div>
+        <div class="sr"><span class="sn">평균 참가비</span><span class="sv">${D.fee_avg.toLocaleString()}원</span></div>
+        <div class="sr"><span class="sn">무료 활동 건수</span><span class="sv" style="color:var(--green)">${D.fee_free}건 (${Math.round(D.fee_free/D.total*100)}%)</span></div>
+        <div class="sr"><span class="sn">일정규모 해당</span><span class="sv" style="color:var(--orange)">${D.scale['해당']||0}건</span></div>
+        <div class="sr"><span class="sn">위험도높은 활동</span><span class="sv" style="color:var(--red)">${D.danger['해당']||0}건</span></div>
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────
+// TAB 3: 지역 비교
+// ──────────────────────────────────────
+['sel-a','sel-b'].forEach(id=>{
+  const sel = document.getElementById(id);
+  SORTED.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = `${r} (${DATA[r].total}건)`;
+    sel.appendChild(opt);
+  });
+});
+document.getElementById('sel-a').value='경기도';
+document.getElementById('sel-b').value='서울특별시';
+
+function renderCompare(){
+  const rA = document.getElementById('sel-a').value;
+  const rB = document.getElementById('sel-b').value;
+  if(!rA||!rB) return;
+  if(rA===rB){ document.getElementById('cmp-content').innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">다른 지역을 선택해주세요</div>`; return; }
+
+  const A=DATA[rA], B=DATA[rB];
+  const rankA=SORTED.indexOf(rA)+1, rankB=SORTED.indexOf(rB)+1;
+  const tot = DATA['_전체'].total;
+
+  function dualBars(keys, dA, dB){
+    const allMax = Math.max(...keys.map(k=>Math.max(dA[k]||0,dB[k]||0)),1);
+    return keys.map(k=>{
+      const vA=dA[k]||0, vB=dB[k]||0;
+      const wA=Math.max(vA/allMax*100,vA?3:0), wB=Math.max(vB/allMax*100,vB?3:0);
+      const win = vA>vB?`<span class="win a">🔵</span>`:vA<vB?`<span class="win b">🟠</span>`:'';
+      return `<div class="dbr">
+        <div class="dta"><div class="dfa" style="width:${wA}%">${vA}</div></div>
+        <div class="dlbl">${k}${win}</div>
+        <div class="dtb"><div class="dfb" style="width:${wB}%">${vB}</div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function statCompare(label, vA, vB, suffix=''){
+    const win = vA>vB?`<span class="win a">🔵</span>`:vA<vB?`<span class="win b">🟠</span>`:'';
+    return `<div class="sr">
+      <span class="sn">${label}</span>
+      <span style="display:flex;gap:16px;align-items:center;">
+        <span style="color:var(--A);font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${typeof vA==='number'?vA.toLocaleString():vA}${suffix}</span>
+        ${win}
+        <span style="color:var(--B);font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${typeof vB==='number'?vB.toLocaleString():vB}${suffix}</span>
+      </span>
+    </div>`;
+  }
+
+  const gTA = A.grade['초']+A.grade['중']+A.grade['고']+A.grade['대'];
+  const gTB = B.grade['초']+B.grade['중']+B.grade['고']+B.grade['대'];
+
+  const AT_KEYS = ['기본형','개별단위','학교단체 숙박형','숙박형','이동형'];
+  const ORG1_KEYS = ['청소년수련시설','일반','공공행정','컨소시엄','교육기관'];
+  const ORG2_KEYS = ['청소년수련원','청소년수련관','청소년문화의집','영리법인','유스호스텔','공공기관','비영리법인'];
+  const MND_KEYS = ['해당없음','일정규모','복수해당','고위험군'];
+  const AREA_KEYS = ['자기(인성)계발활동','모험개척활동','문화예술활동','건강·보건활동','환경보존활동','과학정보활동','직업체험활동','봉사활동','교류활동','기타'];
+
+  document.getElementById('cmp-content').innerHTML = `
+    <!-- 범례 -->
+    <div style="display:flex;gap:16px;margin-bottom:16px;font-size:12px;font-weight:700;">
+      <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border-radius:3px;background:var(--A);display:inline-block"></span>🔵 ${rA} (${rankA}위)</span>
+      <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border-radius:3px;background:var(--B);display:inline-block"></span>🟠 ${rB} (${rankB}위)</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--muted)">← 🔵 지역A &nbsp;|&nbsp; 지역B 🟠 →</span>
+    </div>
+
+    <!-- KPI compare -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+      ${[['보유건수','total','건'],['활동인원합계','inw_total','명'],['평균활동인원','inw_avg','명'],['평균참가비','fee_avg','원'],['위험도활동','danger.해당','건']].map(([lbl,key,suf])=>{
+        const vA = key.includes('.')?A[key.split('.')[0]][key.split('.')[1]]||0:A[key];
+        const vB = key.includes('.')?B[key.split('.')[0]][key.split('.')[1]]||0:B[key];
+        const win = vA>vB?'var(--A)':vA<vB?'var(--B)':'var(--muted)';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${lbl}</div>
+          <div style="font-size:15px;font-weight:900;font-family:'DM Mono',monospace;color:var(--A)">${(typeof vA==='number'?vA.toLocaleString():vA)}${suf}</div>
+          <div style="font-size:11px;color:var(--muted);margin:2px 0">vs</div>
+          <div style="font-size:15px;font-weight:900;font-family:'DM Mono',monospace;color:var(--B)">${(typeof vB==='number'?vB.toLocaleString():vB)}${suf}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- 비교 차트 행 1 -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">🎭 <span>활동유형 비교</span></div>
+        ${dualBars(AT_KEYS, A.act_type, B.act_type)}
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 <span>활동영역 비교</span></div>
+        ${dualBars(AREA_KEYS, A.area, B.area)}
+      </div>
+    </div>
+
+    <!-- 비교 차트 행 2 -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">🏢 <span>기관유형1 비교</span></div>
+        ${dualBars(ORG1_KEYS, A.org1, B.org1)}
+        <div class="card-title" style="margin-top:12px;">🏛️ <span>기관유형 세부 비교</span></div>
+        ${dualBars(ORG2_KEYS, A.org2, B.org2)}
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ <span>의무인증 · 위험도 비교</span></div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">의무인증여부</div>
+        ${dualBars(MND_KEYS, A.mandatory, B.mandatory)}
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 6px">일정규모</div>
+        ${dualBars(['해당','미해당'], A.scale, B.scale)}
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 6px">위험도높은활동</div>
+        ${dualBars(['해당','미해당'], A.danger, B.danger)}
+      </div>
+    </div>
+
+    <!-- 교급 + 기타통계 비교 -->
+    <div class="g2" style="margin-bottom:0;">
+      <div class="card">
+        <div class="card-title">🎒 <span>대상교급 비교</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;font-weight:700;">
+          <span style="color:var(--A)">← 🔵 ${rA}</span>
+          <span style="color:var(--B)">${rB} 🟠 →</span>
+        </div>
+        ${['초','중','고','대'].map(k=>{
+          const vA=A.grade[k]||0, vB=B.grade[k]||0;
+          const mx=Math.max(vA,vB,1);
+          const wA=Math.max(vA/mx*100,vA?4:0), wB=Math.max(vB/mx*100,vB?4:0);
+          const win=vA>vB?`<span class="win a">🔵</span>`:vA<vB?`<span class="win b">🟠</span>`:'';
+          return `<div class="dbr">
+            <div class="dta"><div class="dfa" style="width:${wA}%">${vA}(${gTA?Math.round(vA/gTA*100):0}%)</div></div>
+            <div class="dlbl">${k}학교${win}</div>
+            <div class="dtb"><div class="dfb" style="width:${wB}%">${vB}(${gTB?Math.round(vB/gTB*100):0}%)</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title">📊 <span>주요 지표 비교</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;font-weight:700;">
+          <span style="color:var(--A)">🔵 ${rA}</span><span style="color:var(--B)">${rB} 🟠</span>
+        </div>
+        ${statCompare('보유건수',A.total,B.total,'건')}
+        ${statCompare('총 활동인원',A.inw_total,B.inw_total,'명')}
+        ${statCompare('평균 활동인원',A.inw_avg,B.inw_avg,'명')}
+        ${statCompare('최대 활동인원',A.inw_max,B.inw_max,'명')}
+        ${statCompare('평균 참가비',A.fee_avg,B.fee_avg,'원')}
+        ${statCompare('무료 활동',A.fee_free,B.fee_free,'건')}
+        ${statCompare('일정규모 해당',A.scale['해당']||0,B.scale['해당']||0,'건')}
+        ${statCompare('위험도 해당',A.danger['해당']||0,B.danger['해당']||0,'건')}
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────
+// INIT
+// ──────────────────────────────────────
+renderOverview();
+renderCompare();
+</script>
+</body>
+</html>
